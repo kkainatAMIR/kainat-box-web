@@ -290,7 +290,7 @@ function MotionStory() {
   return <section className="motion-story" ref={root} aria-label="Scroll-controlled packaging showcase">
     <div className="motion-stage" ref={stage} data-scene="intro">
       <div className="motion-grid"></div><div className="motion-glow"></div>
-      <div className="motion-topline"><span>KA / PACKAGING IN MOTION</span><span>SCROLL TO DIRECT THE STORY</span></div>
+      <div className="motion-topline"><span>KAB / PACKAGING IN MOTION</span><span>SCROLL TO DIRECT THE STORY</span></div>
       <div className="motion-copy motion-copy-intro"><span className="eyebrow">NOT A STATIC BOX</span><h2>Your product<br/>sets the <em>motion.</em></h2><p>Keep scrolling. Every movement has been designed around the product inside.</p></div>
       <div className="motion-copy motion-copy-shoe"><span className="motion-number">01 / 03</span><span className="eyebrow">PRECISION FIT</span><h2>Lift the<br/><em>experience.</em></h2><p>The product rises. The structure stays steady. Protection and presentation, moving as one.</p></div>
       <div className="motion-copy motion-copy-pizza"><span className="motion-number">02 / 03</span><span className="eyebrow">FRESH BY DESIGN</span><h2>Made to arrive<br/><em>just right.</em></h2><p>Heat, airflow and board strength engineered into one smooth delivery experience.</p></div>
@@ -301,12 +301,12 @@ function MotionStory() {
       </div>
       <div className="motion-scene motion-pizza-scene">
         <div className="motion-shadow pizza-shadow"></div>
-        <img className="motion-pizzabox" src="/images/motion-pizzabox.webp" alt="Open KA branded pizza box" />
+        <img className="motion-pizzabox" src="/images/motion-pizzabox.webp" alt="Open KAB branded pizza box" />
         <img className="motion-pizza" src="/images/motion-pizza.webp" alt="Pizza moving into its custom delivery box" />
       </div>
       <div className="motion-finale">
         <div className="motion-finale-copy"><span className="motion-number">03 / 03</span><span className="eyebrow light">ONE MAKER. EVERY FORMAT.</span><h2>Now imagine<br/><em>your product.</em></h2><p>From food to footwear and everything in between—built around what you make.</p><Link to="/quote" className="btn btn-accent">Create your packaging <ArrowRight/></Link></div>
-        <div className="finale-stack"><img src="/images/category-bakery.webp" alt="KA bakery box"/><img src="/images/category-carton.webp" alt="KA shipping cartons"/><img src="/images/category-custom.webp" alt="KA custom packaging"/></div>
+        <div className="finale-stack"><img src="/images/category-bakery.webp" alt="KAB bakery box"/><img src="/images/category-carton.webp" alt="KAB shipping cartons"/><img src="/images/category-custom.webp" alt="KAB custom packaging"/></div>
       </div>
       <div className="motion-rail"><span>01</span><i><b></b></i><span>03</span></div>
       <div className="motion-hint"><ChevronDown/> KEEP SCROLLING</div>
@@ -491,7 +491,7 @@ function BlogPage() {
 function BlogPost({ slug }) {
   const post=posts.find(p=>p.slug===slug); if(!post)return <NotFound/>;
   const related=posts.filter(p=>p.slug!==post.slug).slice(0,2);
-  return <><article className="article"><header className="article-head container"><div className="breadcrumb"><Link to="/blog">Journal</Link><span>/</span><b>{post.category}</b></div><span className="eyebrow">{post.category}</span><h1>{post.title}</h1><p>{post.excerpt}</p><div className="article-by"><div className="author-avatar">KA</div><div><strong>Kainat Studio</strong><span>{post.date} · {post.read}</span></div></div></header><div className="article-image container"><img src={post.image} alt={post.title}/></div><div className="article-body container"><aside><span>SHARE</span><a href="#"><Linkedin/></a><a href="#"><Facebook/></a><a href={`mailto:?subject=${encodeURIComponent(post.title)}`}><Mail/></a></aside><div>{post.content.map((para,i)=><React.Fragment key={i}>{i===1&&<h2>{post.category==='Sustainability'?'Design the waste out first.':'Start with the job, not the jargon.'}</h2>}<p className={i===0?'lead':''}>{para}</p>{i===2&&<blockquote>“The best packaging decision balances protection, production, presentation and what happens after use.”</blockquote>}</React.Fragment>)}<div className="article-cta"><Box/><div><h3>Need help applying this to your product?</h3><p>Bring us the brief. We’ll bring material and structural options.</p></div><Link to="/quote">Talk to a specialist <ArrowRight/></Link></div></div></div></article><section className="section related-posts"><div className="container"><SectionHeading eyebrow="KEEP READING" title="Related field notes."/><div className="post-grid">{related.map(p=><article className="post-card" key={p.slug}><Link to={`/blog/${p.slug}`}><div className="post-image"><img src={p.image} alt={p.title}/><span>{p.category}</span></div><div className="post-copy"><small>{p.date} · {p.read}</small><h3>{p.title}</h3><b>Read article <ArrowRight/></b></div></Link></article>)}</div></div></section></>
+  return <><article className="article"><header className="article-head container"><div className="breadcrumb"><Link to="/blog">Journal</Link><span>/</span><b>{post.category}</b></div><span className="eyebrow">{post.category}</span><h1>{post.title}</h1><p>{post.excerpt}</p><div className="article-by"><div className="author-avatar">KAB</div><div><strong>Kainat Studio</strong><span>{post.date} · {post.read}</span></div></div></header><div className="article-image container"><img src={post.image} alt={post.title}/></div><div className="article-body container"><aside><span>SHARE</span><a href="#"><Linkedin/></a><a href="#"><Facebook/></a><a href={`mailto:?subject=${encodeURIComponent(post.title)}`}><Mail/></a></aside><div>{post.content.map((para,i)=><React.Fragment key={i}>{i===1&&<h2>{post.category==='Sustainability'?'Design the waste out first.':'Start with the job, not the jargon.'}</h2>}<p className={i===0?'lead':''}>{para}</p>{i===2&&<blockquote>“The best packaging decision balances protection, production, presentation and what happens after use.”</blockquote>}</React.Fragment>)}<div className="article-cta"><Box/><div><h3>Need help applying this to your product?</h3><p>Bring us the brief. We’ll bring material and structural options.</p></div><Link to="/quote">Talk to a specialist <ArrowRight/></Link></div></div></div></article><section className="section related-posts"><div className="container"><SectionHeading eyebrow="KEEP READING" title="Related field notes."/><div className="post-grid">{related.map(p=><article className="post-card" key={p.slug}><Link to={`/blog/${p.slug}`}><div className="post-image"><img src={p.image} alt={p.title}/><span>{p.category}</span></div><div className="post-copy"><small>{p.date} · {p.read}</small><h3>{p.title}</h3><b>Read article <ArrowRight/></b></div></Link></article>)}</div></div></section></>
 }
 
 function Newsletter(){const [email,setEmail]=useState('');const [done,setDone]=useState(false);return <section className="newsletter"><div className="container newsletter-inner"><div><span className="eyebrow">THE GOOD EDIT</span><h2>Packaging ideas.<br/><em>Nicely packed.</em></h2></div><div>{done?<div className="newsletter-done"><CheckCircle2/><strong>Thank you. Your first note is on its way.</strong></div>:<><p>Occasional practical notes for product, brand and operations teams.</p><form onSubmit={e=>{e.preventDefault();saveSubmission('newsletter',{email});setDone(true)}}><input required type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Work email address"/><button className="btn btn-dark">Subscribe <ArrowRight/></button></form><small>Useful, brief, easy to leave.</small></>}</div></div></section>}
@@ -513,7 +513,7 @@ function CartDrawer({ items, open, close, updateQty, remove, navigate }) {
 function CheckoutPage({ items, clearCart, showToast, navigate }) {
  const [done,setDone]=useState(false); const subtotal=items.reduce((s,i)=>s+i.price*i.qty,0); const shipping=subtotal>100000?0:2500;
  const submit=e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget));saveSubmission('orders',{...data,items,total:subtotal+shipping});clearCart();setDone(true);showToast('Order placed successfully.');};
- if(done)return <section className="success-page"><div><span className="success-icon"><Check/></span><span className="eyebrow">ORDER CONFIRMED</span><h1>It’s in the<br/><em>production queue.</em></h1><p>We’ve emailed your order summary. Our team will confirm stock and dispatch details shortly.</p><div className="success-ref">ORDER <strong>KA-{String(Date.now()).slice(-6)}</strong></div><Link to="/products" className="btn btn-dark">Continue shopping <ArrowRight/></Link></div></section>;
+ if(done)return <section className="success-page"><div><span className="success-icon"><Check/></span><span className="eyebrow">ORDER CONFIRMED</span><h1>It’s in the<br/><em>production queue.</em></h1><p>We’ve emailed your order summary. Our team will confirm stock and dispatch details shortly.</p><div className="success-ref">ORDER <strong>KAB-{String(Date.now()).slice(-6)}</strong></div><Link to="/products" className="btn btn-dark">Continue shopping <ArrowRight/></Link></div></section>;
  if(!items.length)return <section className="success-page"><div><ShoppingBag className="large-empty"/><h1>Your cart is empty.</h1><p>Add a production-ready item before heading to checkout.</p><Link to="/products" className="btn btn-dark">Browse products <ArrowRight/></Link></div></section>;
  return <section className="checkout"><div className="container"><div className="checkout-head"><Logo/><span><LockKeyhole/> Secure checkout</span></div><div className="checkout-grid"><form onSubmit={submit}><span className="eyebrow">DELIVERY DETAILS</span><h1>Where should we send it?</h1><div className="form-grid"><Field label="Full name" required full><input name="name" required/></Field><Field label="Email" required><input name="email" type="email" required/></Field><Field label="Phone" required><input name="phone" required/></Field><Field label="Company"><input name="company"/></Field><Field label="City" required><input name="city" required/></Field><Field label="Delivery address" required full><textarea name="address" required rows="3"></textarea></Field></div><div className="payment-choice"><span className="eyebrow">PAYMENT</span><label><input type="radio" name="payment" value="Cash / bank transfer" defaultChecked/><CreditCard/><div><strong>Bank transfer / cash on delivery</strong><small>Our team will confirm payment and delivery terms after order review.</small></div></label></div><button className="btn btn-accent checkout-submit">Place order · PKR {(subtotal+shipping).toLocaleString()} <ArrowRight/></button><p className="checkout-legal"><LockKeyhole/> Your details are encrypted in transit. By ordering you agree to our terms.</p></form><aside className="order-summary"><h2>Order summary</h2>{items.map(i=><div className="summary-item" key={i.id}><div><img src={i.image} alt=""/><span>{i.qty}</span></div><p><strong>{i.name}</strong><small>{i.qty} × PKR {i.price.toLocaleString()}</small></p><b>PKR {(i.qty*i.price).toLocaleString()}</b></div>)}<div className="summary-totals"><div><span>Subtotal</span><b>PKR {subtotal.toLocaleString()}</b></div><div><span>Shipping</span><b>{shipping?'PKR '+shipping.toLocaleString():'FREE'}</b></div><div><strong>Total</strong><strong>PKR {(subtotal+shipping).toLocaleString()}</strong></div></div><div className="summary-trust"><ShieldCheck/><p><strong>Order review included</strong><span>A specialist verifies stock, quantities and delivery before processing.</span></p></div></aside></div></div></section>
 }
@@ -526,13 +526,17 @@ function saveSubmission(type,data){
   const {_file,...serializable}=data;
   const payload={...serializable,formType:type,createdAt:new Date().toISOString()};
   try{const key=`kainat_${type}`;const existing=JSON.parse(localStorage.getItem(key)||'[]');localStorage.setItem(key,JSON.stringify([...existing,payload]));}catch(e){console.info('Local submission storage unavailable.',e)}
-  const endpoint=import.meta.env.VITE_FORMS_ENDPOINT;
-  if(endpoint){
-    let request;
-    if(_file){const body=new FormData();Object.entries(payload).forEach(([k,v])=>body.append(k,Array.isArray(v)?v.join(', '):v));body.append('artwork',_file);request={method:'POST',body};}
-    else request={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)};
-    fetch(endpoint,request).catch(e=>console.error('Form delivery failed:',e));
-  }
+  const endpoint=import.meta.env.VITE_FORMS_ENDPOINT || 'http://localhost:4000/api/forms';
+  let request;
+  if(_file){const body=new FormData();Object.entries(payload).forEach(([k,v])=>body.append(k,Array.isArray(v)?v.join(', '):v));body.append('artwork',_file);request={method:'POST',body};}
+  else request={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)};
+  fetch(endpoint,request)
+    .then(async (response)=>{
+      const text=await response.text();
+      if(!response.ok){throw new Error(text || 'Submission failed');}
+      return text;
+    })
+    .catch((e)=>console.error('Form delivery failed:',e));
 }
 
 function App(){
