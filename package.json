@@ -16,8 +16,8 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "lucide-react": "^0.468.0",
-    "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.9.16",
+    "multer": "^2.2.0",
+    "nodemailer": "^9.0.5",
     "react": "latest",
     "react-dom": "latest",
     "vite": "latest"

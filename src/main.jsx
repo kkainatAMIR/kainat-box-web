@@ -3,13 +3,14 @@ import { createRoot } from 'react-dom/client';
 import {
   ArrowRight, Award, Box, CalendarDays, Check, CheckCircle2, ChevronDown,
   ChevronLeft, ChevronRight, CircleCheck, Clock3, CreditCard, Factory,
-  Facebook, FileUp, Globe2, Headphones, HeartHandshake, Instagram, Leaf,
-  Linkedin, LockKeyhole, Mail, MapPin, Menu, MessageCircle, Minus, Package,
-  Palette, Phone, Plus, Printer, Quote as QuoteIcon, Recycle, Ruler, Search,
-  Send, ShieldCheck, ShoppingBag, SlidersHorizontal, Star, Truck, Upload,
-  UserRound, X, Zap
+  Facebook, FileUp, Globe2, Headphones, Heart, HeartHandshake, Instagram, Leaf,
+  Linkedin, LockKeyhole, LogIn, LogOut, Mail, MapPin, Menu, MessageCircle, Minus,
+  Package, Palette, Phone, Plus, Printer, Quote as QuoteIcon, Recycle, Ruler,
+  Search, Send, ShieldCheck, ShoppingBag, SlidersHorizontal, Star, Truck, Upload,
+  UserPlus, UserRound, X, Zap
 } from 'lucide-react';
 import './styles.css';
+import './enhancements.css';
 
 const BRAND = {
   name: 'Kainat Box Makers',
@@ -19,29 +20,67 @@ const BRAND = {
   address: '22 Industrial Estate, Kot Lakhpat, Lahore, Pakistan',
 };
 
+const API_ROOT = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const StoreContext = React.createContext({ wishlist: [], toggleWishlist: () => {}, user: null, openAuth: () => {} });
+
+function readStoredArray(key) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(value) ? value : [];
+  } catch { return []; }
+}
+
+async function apiRequest(path, options = {}) {
+  const config = { credentials: 'include', ...options };
+  if (config.body && !(config.body instanceof FormData) && typeof config.body !== 'string') {
+    config.headers = { 'Content-Type': 'application/json', ...(config.headers || {}) };
+    config.body = JSON.stringify(config.body);
+  }
+  const response = await fetch(`${API_ROOT}${path}`, config);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+  return data;
+}
+
+const gallerySets = {
+  'Pizza Boxes': ['/images/gallery/pizza-1.webp', '/images/gallery/pizza-2.webp', '/images/gallery/pizza-3.webp'],
+  'Shoe Boxes': ['/images/gallery/shoe-1.webp', '/images/gallery/shoe-2.webp', '/images/gallery/shoe-3.webp'],
+  'Bakery Boxes': ['/images/gallery/bakery-1.webp', '/images/gallery/bakery-2.webp', '/images/gallery/bakery-3.webp'],
+  'Lollipop Boxes': ['/images/gallery/lollipop-1.webp', '/images/gallery/lollipop-2.webp', '/images/gallery/lollipop-3.webp'],
+  Cartons: ['/images/gallery/carton-1.webp', '/images/gallery/carton-2.webp', '/images/gallery/carton-3.webp'],
+  'Custom Packaging': ['/images/gallery/custom-1.webp', '/images/gallery/custom-2.webp', '/images/gallery/custom-3.webp'],
+};
+
+function galleryForProduct(product) {
+  if (product?.id === 'white-corrugated-carton') {
+    return ['/images/gallery/white-carton-1.webp', '/images/gallery/white-carton-2.webp', '/images/gallery/white-carton-3.webp'];
+  }
+  return gallerySets[product?.category] || [product?.image].filter(Boolean);
+}
+
 const categories = [
-  { name: 'Pizza Boxes', slug: 'pizza-boxes', image: '/images/category-pizza.webp', kicker: 'Food-safe & heat smart', blurb: 'Grease-resistant corrugated boxes engineered for a crisp delivery.' },
-  { name: 'Shoe Boxes', slug: 'shoe-boxes', image: '/images/category-shoe.webp', kicker: 'Retail-ready rigidity', blurb: 'Premium rigid and folding formats that turn unboxing into a brand moment.' },
-  { name: 'Bakery Boxes', slug: 'bakery-boxes', image: '/images/category-bakery.webp', kicker: 'Freshness, beautifully framed', blurb: 'Food-grade cake, pastry and window boxes with custom-fit inserts.' },
-  { name: 'Lollipop Boxes', slug: 'lollipop-boxes', image: '/images/category-lollipop.webp', kicker: 'Display-ready sweetness', blurb: 'Food-safe individual, window and counter-display packs made for confectionery.' },
-  { name: 'Cartons', slug: 'cartons', image: '/images/category-carton.webp', kicker: 'Built for the journey', blurb: 'Tough corrugated shipping cartons for storage, logistics and ecommerce.' },
-  { name: 'Custom Packaging', slug: 'custom-packaging', image: '/images/category-custom.webp', kicker: 'Made without limits', blurb: 'Purpose-built structures, finishes and inserts shaped around your product.' },
+  { name: 'Pizza Boxes', slug: 'pizza-boxes', image: '/images/gallery/pizza-1.webp', kicker: 'Food-safe & heat smart', blurb: 'Grease-resistant corrugated boxes engineered for a crisp delivery.' },
+  { name: 'Shoe Boxes', slug: 'shoe-boxes', image: '/images/gallery/shoe-1.webp', kicker: 'Retail-ready rigidity', blurb: 'Premium rigid and folding formats that turn unboxing into a brand moment.' },
+  { name: 'Bakery Boxes', slug: 'bakery-boxes', image: '/images/gallery/bakery-1.webp', kicker: 'Freshness, beautifully framed', blurb: 'Food-grade cake, pastry and window boxes with custom-fit inserts.' },
+  { name: 'Lollipop Boxes', slug: 'lollipop-boxes', image: '/images/gallery/lollipop-1.webp', kicker: 'Display-ready sweetness', blurb: 'Food-safe individual, window and counter-display packs made for confectionery.' },
+  { name: 'Cartons', slug: 'cartons', image: '/images/gallery/carton-1.webp', kicker: 'Built for the journey', blurb: 'Tough corrugated shipping cartons for storage, logistics and ecommerce.' },
+  { name: 'Custom Packaging', slug: 'custom-packaging', image: '/images/gallery/custom-1.webp', kicker: 'Made without limits', blurb: 'Purpose-built structures, finishes and inserts shaped around your product.' },
 ];
 
 const products = [
-  { id: 'kraft-pizza-12', name: 'Kraft Pizza Box — 12″', category: 'Pizza Boxes', material: 'Corrugated Kraft', size: '12 × 12 × 1.8 in', price: 165, moq: 100, image: '/images/category-pizza.webp', desc: 'Food-safe, grease-resistant E-flute box with steam vents.', featured: true, specs: ['Food-grade kraft board', 'Heat-retaining E-flute', 'Single-color print included', '100% recyclable'] },
-  { id: 'premium-pizza-14', name: 'Premium Pizza Box — 14″', category: 'Pizza Boxes', material: 'White Corrugated', size: '14 × 14 × 1.8 in', price: 195, moq: 100, image: '/images/category-pizza.webp', desc: 'Bright white print surface for vibrant restaurant branding.', specs: ['Food-safe white liner', 'CMYK-ready surface', 'Easy-lock corners', 'Recyclable'] },
-  { id: 'slide-shoe-box', name: 'Slide Drawer Shoe Box', category: 'Shoe Boxes', material: 'Rigid Board', size: '13 × 8 × 5 in', price: 420, moq: 50, image: '/images/category-shoe.webp', desc: 'A premium drawer box with ribbon pull for elevated footwear.', featured: true, specs: ['1200gsm rigid board', 'Textured paper wrap', 'Cotton pull tab', 'Foil or emboss available'] },
-  { id: 'classic-shoe-box', name: 'Classic Two-Piece Shoe Box', category: 'Shoe Boxes', material: 'Kraft Board', size: '13 × 8 × 5 in', price: 275, moq: 100, image: '/images/category-shoe.webp', desc: 'Durable lid-and-base construction for retail and shipping.', specs: ['600gsm kraft board', 'Scuff resistant', 'Pantone printing', 'Custom insert available'] },
-  { id: 'window-pastry-box', name: 'Window Pastry Box', category: 'Bakery Boxes', material: 'Food-grade Kraft', size: '10 × 8 × 3 in', price: 145, moq: 100, image: '/images/category-bakery.webp', desc: 'A clear plant-based window puts your bakes center stage.', featured: true, specs: ['Food contact certified', 'PLA window option', 'Auto-lock base', 'Flat-packed delivery'] },
-  { id: 'cake-box-12', name: 'Tall Cake Box — 12″', category: 'Bakery Boxes', material: 'SBS Paperboard', size: '12 × 12 × 10 in', price: 225, moq: 50, image: '/images/category-bakery.webp', desc: 'A sturdy, tall-format box with a removable front panel.', specs: ['350gsm food board', 'Reinforced base', 'Optional carry handle', 'Grease resistant'] },
-  { id: 'lollipop-display-box', name: 'Lollipop Counter Display Box', category: 'Lollipop Boxes', material: 'Food-grade Kraft', size: '9 × 7 × 6 in', price: 175, moq: 100, image: '/images/category-lollipop.webp', desc: 'A retail-ready countertop display that keeps wrapped lollipops upright and visible.', featured: true, specs: ['Food-safe kraft board', 'Custom display insert', 'Full-color print option', 'Flat-packed delivery'] },
-  { id: 'single-lollipop-window-box', name: 'Single Lollipop Window Box', category: 'Lollipop Boxes', material: 'Food-grade Kraft', size: '3 × 2 × 8 in', price: 95, moq: 100, image: '/images/category-lollipop.webp', desc: 'A slim presentation box with a clear window for artisan and event lollipops.', specs: ['Food-contact safe board', 'Clear PLA window option', 'Custom fit insert', 'Ribbon and foil available'] },
-  { id: 'mailer-carton', name: 'Self-Lock Mailer Carton', category: 'Cartons', material: 'E-flute Corrugated', size: '12 × 9 × 4 in', price: 185, moq: 100, image: '/images/category-carton.webp', desc: 'Protective ecommerce mailer with a clean, tape-free presentation.', featured: true, specs: ['3-layer E-flute', 'Crash-lock front', 'Inside/outside print', 'Tear-strip available'] },
-  { id: 'shipping-carton', name: 'Heavy-Duty Shipping Carton', category: 'Cartons', material: 'B-flute Corrugated', size: '18 × 14 × 12 in', price: 260, moq: 50, image: '/images/category-carton.webp', desc: 'Stackable transport carton built for demanding supply chains.', specs: ['5-ply option', 'Burst-tested board', 'Flexographic print', 'Custom dimensions'] },
-  { id: 'white-corrugated-carton', name: 'Plain White Corrugated Carton', category: 'Cartons', material: 'White Corrugated', size: '12 × 12 × 10 in', price: 230, moq: 50, image: '/images/product-white-carton.webp', desc: 'A clean white shipping carton with a crisp surface for retail, gifting, ecommerce and understated branding.', specs: ['Bright white outer liner', 'Protective corrugated board', 'Plain or minimal one-color print', 'Custom dimensions available'] },
-  { id: 'hex-gift-box', name: 'Hexagonal Gift Box', category: 'Custom Packaging', material: 'Rigid Board', size: 'Custom', price: 520, moq: 50, image: '/images/category-custom.webp', desc: 'An architectural rigid box for gifting, beauty and specialty retail.', specs: ['Bespoke structure', 'Magnetic closure option', 'Premium foil finishes', 'Custom foam insert'] },
-  { id: 'paper-tube', name: 'Premium Paper Tube', category: 'Custom Packaging', material: 'Recycled Paper', size: 'Custom', price: 310, moq: 100, image: '/images/category-custom.webp', desc: 'Circular packaging for cosmetics, tea, candles and gifting.', specs: ['Recycled paper core', 'Food-safe liner option', 'Embossed wrap', 'Metal-free construction'] },
+  { id: 'kraft-pizza-12', name: 'Kraft Pizza Box — 12″', category: 'Pizza Boxes', material: 'Corrugated Kraft', size: '12 × 12 × 1.8 in', price: 165, moq: 100, image: '/images/gallery/pizza-1.webp', desc: 'Food-safe, grease-resistant E-flute box with steam vents.', featured: true, specs: ['Food-grade kraft board', 'Heat-retaining E-flute', 'Single-color print included', '100% recyclable'] },
+  { id: 'premium-pizza-14', name: 'Premium Pizza Box — 14″', category: 'Pizza Boxes', material: 'White Corrugated', size: '14 × 14 × 1.8 in', price: 195, moq: 100, image: '/images/gallery/pizza-1.webp', desc: 'Bright white print surface for vibrant restaurant branding.', specs: ['Food-safe white liner', 'CMYK-ready surface', 'Easy-lock corners', 'Recyclable'] },
+  { id: 'slide-shoe-box', name: 'Slide Drawer Shoe Box', category: 'Shoe Boxes', material: 'Rigid Board', size: '13 × 8 × 5 in', price: 420, moq: 50, image: '/images/gallery/shoe-1.webp', desc: 'A premium drawer box with ribbon pull for elevated footwear.', featured: true, specs: ['1200gsm rigid board', 'Textured paper wrap', 'Cotton pull tab', 'Foil or emboss available'] },
+  { id: 'classic-shoe-box', name: 'Classic Two-Piece Shoe Box', category: 'Shoe Boxes', material: 'Kraft Board', size: '13 × 8 × 5 in', price: 275, moq: 100, image: '/images/gallery/shoe-1.webp', desc: 'Durable lid-and-base construction for retail and shipping.', specs: ['600gsm kraft board', 'Scuff resistant', 'Pantone printing', 'Custom insert available'] },
+  { id: 'window-pastry-box', name: 'Window Pastry Box', category: 'Bakery Boxes', material: 'Food-grade Kraft', size: '10 × 8 × 3 in', price: 145, moq: 100, image: '/images/gallery/bakery-1.webp', desc: 'A clear plant-based window puts your bakes center stage.', featured: true, specs: ['Food contact certified', 'PLA window option', 'Auto-lock base', 'Flat-packed delivery'] },
+  { id: 'cake-box-12', name: 'Tall Cake Box — 12″', category: 'Bakery Boxes', material: 'SBS Paperboard', size: '12 × 12 × 10 in', price: 225, moq: 50, image: '/images/gallery/bakery-1.webp', desc: 'A sturdy, tall-format box with a removable front panel.', specs: ['350gsm food board', 'Reinforced base', 'Optional carry handle', 'Grease resistant'] },
+  { id: 'lollipop-display-box', name: 'Lollipop Counter Display Box', category: 'Lollipop Boxes', material: 'Food-grade Kraft', size: '9 × 7 × 6 in', price: 175, moq: 100, image: '/images/gallery/lollipop-1.webp', desc: 'A retail-ready countertop display that keeps wrapped lollipops upright and visible.', featured: true, specs: ['Food-safe kraft board', 'Custom display insert', 'Full-color print option', 'Flat-packed delivery'] },
+  { id: 'single-lollipop-window-box', name: 'Single Lollipop Window Box', category: 'Lollipop Boxes', material: 'Food-grade Kraft', size: '3 × 2 × 8 in', price: 95, moq: 100, image: '/images/gallery/lollipop-1.webp', desc: 'A slim presentation box with a clear window for artisan and event lollipops.', specs: ['Food-contact safe board', 'Clear PLA window option', 'Custom fit insert', 'Ribbon and foil available'] },
+  { id: 'mailer-carton', name: 'Self-Lock Mailer Carton', category: 'Cartons', material: 'E-flute Corrugated', size: '12 × 9 × 4 in', price: 185, moq: 100, image: '/images/gallery/carton-1.webp', desc: 'Protective ecommerce mailer with a clean, tape-free presentation.', featured: true, specs: ['3-layer E-flute', 'Crash-lock front', 'Inside/outside print', 'Tear-strip available'] },
+  { id: 'shipping-carton', name: 'Heavy-Duty Shipping Carton', category: 'Cartons', material: 'B-flute Corrugated', size: '18 × 14 × 12 in', price: 260, moq: 50, image: '/images/gallery/carton-1.webp', desc: 'Stackable transport carton built for demanding supply chains.', specs: ['5-ply option', 'Burst-tested board', 'Flexographic print', 'Custom dimensions'] },
+  { id: 'white-corrugated-carton', name: 'Plain White Corrugated Carton', category: 'Cartons', material: 'White Corrugated', size: '12 × 12 × 10 in', price: 230, moq: 50, image: '/images/gallery/white-carton-1.webp', desc: 'A clean white shipping carton with a crisp surface for retail, gifting, ecommerce and understated branding.', specs: ['Bright white outer liner', 'Protective corrugated board', 'Plain or minimal one-color print', 'Custom dimensions available'] },
+  { id: 'hex-gift-box', name: 'Hexagonal Gift Box', category: 'Custom Packaging', material: 'Rigid Board', size: 'Custom', price: 520, moq: 50, image: '/images/gallery/custom-1.webp', desc: 'An architectural rigid box for gifting, beauty and specialty retail.', specs: ['Bespoke structure', 'Magnetic closure option', 'Premium foil finishes', 'Custom foam insert'] },
+  { id: 'paper-tube', name: 'Premium Paper Tube', category: 'Custom Packaging', material: 'Recycled Paper', size: 'Custom', price: 310, moq: 100, image: '/images/gallery/custom-1.webp', desc: 'Circular packaging for cosmetics, tea, candles and gifting.', specs: ['Recycled paper core', 'Food-safe liner option', 'Embossed wrap', 'Metal-free construction'] },
 ];
 
 const testimonials = [
@@ -52,9 +91,9 @@ const testimonials = [
 ];
 
 const posts = [
-  { slug: 'right-board-for-your-box', title: 'How to choose the right board for your packaging', category: 'Packaging Tips', date: 'August 02, 2026', read: '6 min read', image: '/images/category-carton.webp', excerpt: 'A practical guide to paperboard, kraft, E-flute and B-flute—without the jargon.', content: ['Choosing the right packaging board starts with your product, journey, and brand position—not with thickness alone.', 'Paperboard works beautifully for lighter retail products. Corrugated board adds a fluted layer that absorbs impact, making it ideal for food delivery, ecommerce and shipping. The flute profile changes both strength and print finish.', 'Begin with four questions: How heavy is the product? How far will it travel? Does it need food or moisture resistance? What should the unboxing feel like? A packaging specialist can then engineer the lightest structure that meets those demands.', 'Sampling is essential. Test a production-grade prototype with the actual product before approving a bulk run. This small step prevents avoidable fit, print and logistics issues.'] },
-  { slug: 'less-material-more-impact', title: 'Less material, more impact: the new rules of sustainable packaging', category: 'Sustainability', date: 'July 18, 2026', read: '5 min read', image: '/images/category-custom.webp', excerpt: 'Why smart structural design often matters more than an eco label.', content: ['The most sustainable packaging is often the packaging that simply uses less.', 'Right-sizing a box reduces board consumption, shipping volume and filler material all at once. Mono-material construction also makes disposal clearer for customers and improves recyclability in real-world collection systems.', 'Great sustainable design is not about making packaging look plain. Water-based inks, uncoated textures and clever structural reveals can create a premium experience with fewer mixed materials.', 'Ask your supplier for a material reduction review. Small changes to dimensions, flute and locking style can produce meaningful improvements across a high-volume order.'] },
-  { slug: 'bakery-rebrand-case-study', title: 'Case study: a bakery box designed to sell the story inside', category: 'Case Studies', date: 'June 26, 2026', read: '4 min read', image: '/images/category-bakery.webp', excerpt: 'How a smarter window, one ink, and a confident structure lifted shelf presence.', content: ['Crumb & Co. needed one packaging family that could work across pastries, cookies and celebration gifting.', 'We reduced the system to three dielines and one forest-green ink. A plant-based window created product visibility, while a shared grid made every size feel unmistakably related.', 'The simplified system reduced setup costs and made reordering easier. Better nesting also increased the number of flat boxes per shipping carton.', 'The outcome was packaging that looked more considered while using fewer components—proof that brand impact and production efficiency can reinforce each other.'] },
+  { slug: 'right-board-for-your-box', title: 'How to choose the right board for your packaging', category: 'Packaging Tips', date: 'August 02, 2026', read: '6 min read', image: '/images/gallery/carton-1.webp', excerpt: 'A practical guide to paperboard, kraft, E-flute and B-flute—without the jargon.', content: ['Choosing the right packaging board starts with your product, journey, and brand position—not with thickness alone.', 'Paperboard works beautifully for lighter retail products. Corrugated board adds a fluted layer that absorbs impact, making it ideal for food delivery, ecommerce and shipping. The flute profile changes both strength and print finish.', 'Begin with four questions: How heavy is the product? How far will it travel? Does it need food or moisture resistance? What should the unboxing feel like? A packaging specialist can then engineer the lightest structure that meets those demands.', 'Sampling is essential. Test a production-grade prototype with the actual product before approving a bulk run. This small step prevents avoidable fit, print and logistics issues.'] },
+  { slug: 'less-material-more-impact', title: 'Less material, more impact: the new rules of sustainable packaging', category: 'Sustainability', date: 'July 18, 2026', read: '5 min read', image: '/images/gallery/custom-1.webp', excerpt: 'Why smart structural design often matters more than an eco label.', content: ['The most sustainable packaging is often the packaging that simply uses less.', 'Right-sizing a box reduces board consumption, shipping volume and filler material all at once. Mono-material construction also makes disposal clearer for customers and improves recyclability in real-world collection systems.', 'Great sustainable design is not about making packaging look plain. Water-based inks, uncoated textures and clever structural reveals can create a premium experience with fewer mixed materials.', 'Ask your supplier for a material reduction review. Small changes to dimensions, flute and locking style can produce meaningful improvements across a high-volume order.'] },
+  { slug: 'bakery-rebrand-case-study', title: 'Case study: a bakery box designed to sell the story inside', category: 'Case Studies', date: 'June 26, 2026', read: '4 min read', image: '/images/gallery/bakery-1.webp', excerpt: 'How a smarter window, one ink, and a confident structure lifted shelf presence.', content: ['Crumb & Co. needed one packaging family that could work across pastries, cookies and celebration gifting.', 'We reduced the system to three dielines and one forest-green ink. A plant-based window created product visibility, while a shared grid made every size feel unmistakably related.', 'The simplified system reduced setup costs and made reordering easier. Better nesting also increased the number of flat boxes per shipping carton.', 'The outcome was packaging that looked more considered while using fewer components—proof that brand impact and production efficiency can reinforce each other.'] },
 ];
 
 const pageMeta = {
@@ -67,6 +106,8 @@ const pageMeta = {
   '/testimonials': ['Client Reviews', 'See why restaurants, retailers, bakeries and ecommerce brands trust Kainat Box Makers.'],
   '/contact': ['Contact Kainat Box Makers', 'Contact our packaging specialists in Lahore for custom boxes, samples, lead times and support.'],
   '/checkout': ['Secure Checkout', 'Complete your Kainat Box Makers stock packaging order.'],
+  '/wishlist': ['Saved Packaging Wishlist', 'Review and compare your saved Kainat Box Makers packaging formats.'],
+  '/account': ['Customer Account', 'Access your synced wishlist, cart and packaging project history.'],
 };
 
 function useRoute() {
@@ -153,7 +194,7 @@ function SEO({ path }) {
   return null;
 }
 
-function Header({ path, cartCount, openCart }) {
+function Header({ path, cartCount, openCart, wishlistCount, user, openAuth }) {
   const [open, setOpen] = useState(false);
   const nav = [['Products', '/products'], ['Services', '/services'], ['About', '/about'], ['Journal', '/blog'], ['Reviews', '/testimonials'], ['Contact', '/contact']];
   useEffect(() => setOpen(false), [path]);
@@ -170,8 +211,12 @@ function Header({ path, cartCount, openCart }) {
         <nav className={`main-nav ${open ? 'open' : ''}`} aria-label="Main navigation">
           {nav.map(([label, to]) => <Link key={to} to={to} className={path === to || (to === '/products' && path.startsWith('/products')) || (to === '/blog' && path.startsWith('/blog')) ? 'active' : ''}>{label}</Link>)}
           <Link to="/quote" className="btn btn-dark nav-quote">Get a quote <ArrowRight size={16}/></Link>
+          {!user && <div className="mobile-auth-links"><button onClick={()=>{setOpen(false);openAuth('login')}}><LogIn/> Log in</button><button onClick={()=>{setOpen(false);openAuth('signup')}}><UserPlus/> Sign up</button></div>}
         </nav>
         <div className="header-actions">
+          <Link to="/wishlist" className="icon-btn count-trigger" aria-label={`Open wishlist with ${wishlistCount} items`}><Heart size={20}/>{wishlistCount > 0 && <span>{wishlistCount}</span>}</Link>
+          <button className="account-trigger" onClick={()=>{if(user){window.history.pushState({}, '', '/account');window.dispatchEvent(new PopStateEvent('popstate'));window.scrollTo({top:0,behavior:'smooth'})}else openAuth('login')}} aria-label={user ? 'Open your account' : 'Log in'}><UserRound size={18}/><span>{user ? user.name.split(' ')[0] : 'Log in'}</span></button>
+          {!user && <button className="signup-trigger" onClick={()=>openAuth('signup')}>Sign up</button>}
           <button className="icon-btn cart-trigger" onClick={openCart} aria-label={`Open cart with ${cartCount} items`}><ShoppingBag size={20}/>{cartCount > 0 && <span>{cartCount}</span>}</button>
           <button className="menu-btn" onClick={() => setOpen(!open)} aria-label="Toggle menu">{open ? <X/> : <Menu/>}</button>
         </div>
@@ -187,7 +232,7 @@ function Footer({ showToast }) {
     <div className="footer-top container">
       <div className="footer-intro"><Logo light/><p>Purpose-built packaging for brands that care how they arrive.</p><div className="socials"><a href="#" aria-label="Instagram"><Instagram/></a><a href="#" aria-label="LinkedIn"><Linkedin/></a><a href="#" aria-label="Facebook"><Facebook/></a></div></div>
       <div className="footer-column"><h3>Explore</h3><Link to="/products">Products</Link><Link to="/services">Capabilities</Link><Link to="/about">Our story</Link><Link to="/blog">Journal</Link></div>
-      <div className="footer-column"><h3>Support</h3><Link to="/quote">Request a quote</Link><Link to="/contact">Contact</Link><Link to="/testimonials">Client reviews</Link><a href="mailto:hello@kainatboxmakers.com">Artwork guide</a></div>
+      <div className="footer-column"><h3>Support</h3><Link to="/quote">Request a quote</Link><Link to="/wishlist">My wishlist</Link><Link to="/account">My account</Link><Link to="/contact">Contact</Link><Link to="/testimonials">Client reviews</Link></div>
       <div className="footer-news"><span className="eyebrow light">THE GOOD EDIT</span><h3>Useful packaging ideas, occasionally.</h3><form onSubmit={submit}><label className="sr-only" htmlFor="footer-email">Email address</label><input id="footer-email" type="email" required placeholder="Email address" value={email} onChange={e=>setEmail(e.target.value)}/><button aria-label="Subscribe"><ArrowRight/></button></form><small>No noise. Unsubscribe anytime.</small></div>
     </div>
     <div className="footer-bottom container"><span>© 2026 Kainat Box Makers.</span><div><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><span>Made responsibly in Lahore.</span></div></div>
@@ -306,7 +351,7 @@ function MotionStory() {
       </div>
       <div className="motion-finale">
         <div className="motion-finale-copy"><span className="motion-number">03 / 03</span><span className="eyebrow light">ONE MAKER. EVERY FORMAT.</span><h2>Now imagine<br/><em>your product.</em></h2><p>From food to footwear and everything in between—built around what you make.</p><Link to="/quote" className="btn btn-accent">Create your packaging <ArrowRight/></Link></div>
-        <div className="finale-stack"><img src="/images/category-bakery.webp" alt="KAB bakery box"/><img src="/images/category-carton.webp" alt="KAB shipping cartons"/><img src="/images/category-custom.webp" alt="KAB custom packaging"/></div>
+        <div className="finale-stack"><img src="/images/gallery/bakery-1.webp" alt="KAB bakery box"/><img src="/images/gallery/carton-1.webp" alt="KAB shipping cartons"/><img src="/images/gallery/custom-1.webp" alt="KAB custom packaging"/></div>
       </div>
       <div className="motion-rail"><span>01</span><i><b></b></i><span>03</span></div>
       <div className="motion-hint"><ChevronDown/> KEEP SCROLLING</div>
@@ -348,7 +393,7 @@ function Hero() {
         <div className="hero-proof"><div className="proof-avatars"><span>AM</span><span>HQ</span><span>SA</span></div><div><div className="stars">★★★★★</div><p><strong>4.9/5</strong> from 180+ growing brands</p></div></div>
       </div>
       <div className="hero-visual">
-        <div className="image-stage"><img src="/images/packforge-hero.webp" alt="Collection of Kainat Box Makers custom pizza, shoe, bakery and shipping boxes" /></div>
+        <div className="image-stage"><img src="/images/gallery/custom-1.webp" alt="Collection of Kainat Box Makers custom pizza, shoe, bakery and shipping boxes" /></div>
         <div className="float-card float-material"><Leaf/><div><small>MATERIAL</small><strong>FSC-conscious kraft</strong></div></div>
         <div className="float-card float-moq"><small>MOQ FROM</small><strong>50 <span>units</span></strong></div>
       </div>
@@ -385,11 +430,14 @@ function WhyUs() {
     [Leaf, 'Lighter on resources', 'Recycled content, right-sizing and recyclable structures.'],
     [Headphones, 'A person, not a portal', 'A named packaging specialist from enquiry to delivery.'],
   ];
-  return <section className="section why-section"><div className="container"><SectionHeading eyebrow="WHY KAINAT" title={<>Details matter.<br/><em>So we mind every one.</em></>} text="We blend practical engineering with thoughtful design to create packaging that performs at every touchpoint."/><div className="why-layout"><div className="why-image"><img src="/images/category-custom.webp" alt="Premium range of custom Kainat Box Makers packaging" loading="lazy"/><div className="why-stamp"><Award/><strong>15 YEARS</strong><span>PACKAGING CRAFT</span></div></div><div className="why-grid">{items.map(([Icon,t,p])=><Reveal className="why-card" key={t}><Icon/><div><h3>{t}</h3><p>{p}</p></div></Reveal>)}</div></div></div></section>
+  return <section className="section why-section"><div className="container"><SectionHeading eyebrow="WHY KAINAT" title={<>Details matter.<br/><em>So we mind every one.</em></>} text="We blend practical engineering with thoughtful design to create packaging that performs at every touchpoint."/><div className="why-layout"><div className="why-image"><img src="/images/gallery/custom-1.webp" alt="Premium range of custom Kainat Box Makers packaging" loading="lazy"/><div className="why-stamp"><Award/><strong>15 YEARS</strong><span>PACKAGING CRAFT</span></div></div><div className="why-grid">{items.map(([Icon,t,p])=><Reveal className="why-card" key={t}><Icon/><div><h3>{t}</h3><p>{p}</p></div></Reveal>)}</div></div></div></section>
 }
 
 function ProductCard({ product, addToCart }) {
+  const { wishlist, toggleWishlist } = React.useContext(StoreContext);
+  const wished = wishlist.includes(product.id);
   return <article className="product-card">
+    <button className={`product-heart ${wished ? 'active' : ''}`} onClick={()=>toggleWishlist(product)} aria-label={wished ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`} aria-pressed={wished}><Heart/></button>
     <Link to={`/products/${product.id}`} className="product-image"><img src={product.image} alt={product.name} loading="lazy"/>{product.featured && <span className="pill">Bestseller</span>}<span className="quick-view">View details <ArrowRight size={15}/></span></Link>
     <div className="product-info"><span>{product.category}</span><Link to={`/products/${product.id}`}><h3>{product.name}</h3></Link><p>{product.desc}</p><div className="product-bottom"><div><small>FROM</small><strong>PKR {product.price.toLocaleString()} <i>/ unit</i></strong></div><button onClick={()=>addToCart(product)} aria-label={`Add ${product.name} to cart`}><Plus/></button></div></div>
   </article>
@@ -446,8 +494,12 @@ function ProductDetail({ id, addToCart }) {
   const p=products.find(item=>item.id===id);
   const [qty,setQty]=useState(p?.moq||1);
   const [finish,setFinish]=useState('Natural kraft');
+  const [selectedImage,setSelectedImage]=useState(0);
+  const { wishlist, toggleWishlist } = React.useContext(StoreContext);
   if(!p) return <NotFound/>;
-  return <><div className="breadcrumb container"><Link to="/">Home</Link><span>/</span><Link to="/products">Products</Link><span>/</span><b>{p.name}</b></div><section className="product-detail container"><div className="detail-gallery"><div className="detail-main"><img src={p.image} alt={p.name}/><span className="detail-tag">Made to order</span></div><div className="detail-thumbs"><button className="selected"><img src={p.image} alt={`${p.name} front view`}/></button><button><img src={p.image} alt={`${p.name} angle view`}/></button><button className="swatch-thumb"><span>KRAFT</span></button></div></div><div className="detail-copy"><span className="eyebrow">{p.category}</span><h1>{p.name}</h1><div className="detail-rating"><span>★★★★★</span><b>4.9</b><a href="#reviews">24 verified reviews</a></div><p className="detail-desc">{p.desc} Built to your brand standards with dependable board, precise cutting and rich print.</p><div className="price-line"><strong>PKR {p.price.toLocaleString()}</strong><span>/ unit from {p.moq} units</span></div><div className="option-block"><div><label>Finish</label><small>Selected: {finish}</small></div><div className="finish-options">{['Natural kraft','Forest green','Brilliant white'].map((f,i)=><button key={f} onClick={()=>setFinish(f)} className={finish===f?'selected':''}><i className={`finish-${i}`}></i>{f}</button>)}</div></div><div className="option-block"><div><label>Size</label><a href="mailto:hello@kainatboxmakers.com">Need a custom size?</a></div><select defaultValue={p.size}><option>{p.size}</option><option>Custom dimensions</option></select></div><div className="detail-buy"><div className="qty"><button onClick={()=>setQty(Math.max(p.moq,qty-p.moq))}><Minus/></button><span>{qty}</span><button onClick={()=>setQty(qty+p.moq)}><Plus/></button></div><button className="btn btn-dark" onClick={()=>addToCart(p,qty)}>Add {qty} to cart <ShoppingBag/></button></div><Link to="/quote" className="custom-quote-link"><FileUp/> Custom print, size or structure? <b>Request a tailored quote</b><ArrowRight/></Link><div className="detail-trust"><span><CircleCheck/> Production proof included</span><span><Clock3/> Typical lead time 10–15 days</span><span><Truck/> Nationwide delivery</span></div></div></section><section className="detail-spec-section"><div className="container"><div><span className="eyebrow">PRODUCT SPECIFICATION</span><h2>Built to perform.<br/><em>Finished to impress.</em></h2></div><div className="spec-table"><div><span>Material</span><strong>{p.material}</strong></div><div><span>Standard size</span><strong>{p.size}</strong></div><div><span>Minimum order</span><strong>{p.moq} units</strong></div><div><span>Print options</span><strong>Flexo, CMYK, Pantone</strong></div>{p.specs.map((s,i)=><div key={s}><span>Feature {String(i+1).padStart(2,'0')}</span><strong>{s}</strong></div>)}</div></div></section><section className="section related"><div className="container"><SectionHeading eyebrow="YOU MAY ALSO LIKE" title="More ways to pack it."/><div className="product-grid">{products.filter(x=>x.id!==p.id).slice(0,4).map(x=><ProductCard key={x.id} product={x} addToCart={addToCart}/>)}</div></div></section></>
+  const gallery=galleryForProduct(p);
+  const wished=wishlist.includes(p.id);
+  return <><div className="breadcrumb container"><Link to="/">Home</Link><span>/</span><Link to="/products">Products</Link><span>/</span><b>{p.name}</b></div><section className="product-detail container"><div className="detail-gallery"><div className="detail-main"><img key={gallery[selectedImage]} src={gallery[selectedImage]} alt={`${p.name} ${['front three-quarter view','alternate side angle','detail angle'][selectedImage] || 'product view'}`}/><span className="detail-tag">Made to order</span><span className="gallery-count">{selectedImage + 1} / {gallery.length}</span></div><div className="detail-thumbs">{gallery.map((image,index)=><button key={image} onClick={()=>setSelectedImage(index)} className={selectedImage===index?'selected':''} aria-label={`Show ${p.name} view ${index+1}`}><img src={image} alt=""/></button>)}</div><p className="gallery-note"><CircleCheck/> Three studio angles with KAB branding</p></div><div className="detail-copy"><span className="eyebrow">{p.category}</span><div className="detail-title-row"><h1>{p.name}</h1><button className={`detail-heart ${wished?'active':''}`} onClick={()=>toggleWishlist(p)} aria-pressed={wished}><Heart/><span>{wished?'Saved':'Save'}</span></button></div><div className="detail-rating"><span>★★★★★</span><b>4.9</b><a href="#reviews">24 verified reviews</a></div><p className="detail-desc">{p.desc} Built to your brand standards with dependable board, precise cutting and rich print.</p><div className="price-line"><strong>PKR {p.price.toLocaleString()}</strong><span>/ unit from {p.moq} units</span></div><div className="option-block"><div><label>Finish</label><small>Selected: {finish}</small></div><div className="finish-options">{['Natural kraft','Forest green','Brilliant white'].map((f,i)=><button key={f} onClick={()=>setFinish(f)} className={finish===f?'selected':''}><i className={`finish-${i}`}></i>{f}</button>)}</div></div><div className="option-block"><div><label>Size</label><a href="mailto:hello@kainatboxmakers.com">Need a custom size?</a></div><select defaultValue={p.size}><option>{p.size}</option><option>Custom dimensions</option></select></div><div className="detail-buy"><div className="qty"><button onClick={()=>setQty(Math.max(p.moq,qty-p.moq))}><Minus/></button><span>{qty}</span><button onClick={()=>setQty(qty+p.moq)}><Plus/></button></div><button className="btn btn-dark" onClick={()=>addToCart(p,qty)}>Add {qty} to cart <ShoppingBag/></button></div><Link to="/quote" className="custom-quote-link"><FileUp/> Custom print, size or structure? <b>Request a tailored quote</b><ArrowRight/></Link><div className="detail-trust"><span><CircleCheck/> Production proof included</span><span><Clock3/> Typical lead time 10–15 days</span><span><Truck/> Nationwide delivery</span></div></div></section><section className="detail-spec-section"><div className="container"><div><span className="eyebrow">PRODUCT SPECIFICATION</span><h2>Built to perform.<br/><em>Finished to impress.</em></h2></div><div className="spec-table"><div><span>Material</span><strong>{p.material}</strong></div><div><span>Standard size</span><strong>{p.size}</strong></div><div><span>Minimum order</span><strong>{p.moq} units</strong></div><div><span>Print options</span><strong>Flexo, CMYK, Pantone</strong></div>{p.specs.map((s,i)=><div key={s}><span>Feature {String(i+1).padStart(2,'0')}</span><strong>{s}</strong></div>)}</div></div></section><section className="section related"><div className="container"><SectionHeading eyebrow="YOU MAY ALSO LIKE" title="More ways to pack it."/><div className="product-grid">{products.filter(x=>x.id!==p.id).slice(0,4).map(x=><ProductCard key={x.id} product={x} addToCart={addToCart}/>)}</div></div></section></>
 }
 
 function Field({ label, required, children, hint, full=false }) { return <label className={`field ${full?'full':''}`}><span>{label}{required&&<b>*</b>}</span>{children}{hint&&<small>{hint}</small>}</label> }
@@ -505,17 +557,96 @@ function ContactPage({ showToast }) {
  return <><PageHero eyebrow="CONTACT" title={<>Questions welcome.<br/><em>Boxes encouraged.</em></>} text="Ask about materials, lead times, samples or an idea you’re not quite sure how to make yet."></PageHero><section className="section contact-section"><div className="container contact-grid"><div className="contact-info"><span className="eyebrow">TALK TO A HUMAN</span><h2>We’re here to<br/><em>help shape it.</em></h2><p>Our team replies Monday–Saturday, 9:00–18:00 PKT. Quote requests are usually answered within one business day.</p><div className="contact-method"><Phone/><div><small>CALL / WHATSAPP</small><a href={`tel:${BRAND.phone}`}>{BRAND.phone}</a></div></div><div className="contact-method"><Mail/><div><small>EMAIL</small><a href={`mailto:${BRAND.email}`}>{BRAND.email}</a></div></div><div className="contact-method"><MapPin/><div><small>VISIT</small><address>{BRAND.address}</address></div></div><a className="whatsapp-inline" href={`https://wa.me/${BRAND.phoneRaw}?text=${encodeURIComponent("Hi, I'm interested in custom packaging")}`} target="_blank" rel="noreferrer"><MessageCircle/> Start a WhatsApp chat <ArrowRight/></a></div><div className="contact-form-card">{done?<div className="form-success"><CheckCircle2/><h2>Message received.</h2><p>One of our packaging specialists will be in touch shortly.</p><button onClick={()=>setDone(false)}>Send another message</button></div>:<form onSubmit={submit}><div className="form-title"><span>SEND AN ENQUIRY</span><h2>How can we help?</h2></div><div className="form-grid"><Field label="Name" required><input name="name" required placeholder="Your name"/></Field><Field label="Work email" required><input name="email" type="email" required placeholder="you@company.com"/></Field><Field label="Phone"><input name="phone" placeholder="+92 300 0000000"/></Field><Field label="I’m interested in"><select name="interest"><option>Custom packaging quote</option><option>Stock product order</option><option>Samples & materials</option><option>Existing order support</option><option>Something else</option></select></Field><Field label="Message" full><textarea name="message" required rows="5" placeholder="Tell us about your product or question…"></textarea></Field></div><button className="btn btn-dark" type="submit">Send message <Send/></button></form>}</div></div></section><section className="map-section"><iframe title="Kainat Box Makers location in Lahore" loading="lazy" src="https://www.google.com/maps?q=Kot%20Lakhpat%20Industrial%20Estate%20Lahore&output=embed"></iframe><div className="map-card"><span className="eyebrow">KAINAT BOX MAKERS</span><strong>{BRAND.address}</strong><a href="https://maps.google.com/?q=Kot+Lakhpat+Industrial+Estate+Lahore" target="_blank" rel="noreferrer">Open in Google Maps <ArrowRight/></a></div></section></>
 }
 
+function AuthModal({ auth, setAuth, onAuthenticated }) {
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const mode = auth?.mode || 'login';
+  useEffect(() => {
+    if (!auth) return;
+    setError('');
+    setForm({ name: '', email: '', password: '' });
+    const closeOnEscape = event => event.key === 'Escape' && setAuth(null);
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [auth?.mode]);
+  if (!auth) return null;
+  const submit = async event => {
+    event.preventDefault();
+    setLoading(true); setError('');
+    try {
+      const data = await apiRequest(`/api/auth/${mode === 'signup' ? 'signup' : 'login'}`, { method: 'POST', body: form });
+      await onAuthenticated(data, mode);
+      setAuth(null);
+    } catch (err) { setError(err.message); }
+    finally { setLoading(false); }
+  };
+  return <div className="auth-overlay" role="presentation" onMouseDown={event=>event.target===event.currentTarget&&setAuth(null)}>
+    <section className="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+      <button className="auth-close" onClick={()=>setAuth(null)} aria-label="Close"><X/></button>
+      <div className="auth-brand"><span className="auth-monogram">KAB</span><span>SECURE CUSTOMER ACCOUNT</span></div>
+      <span className="eyebrow">{mode === 'signup' ? 'JOIN KAINAT' : 'WELCOME BACK'}</span>
+      <h2 id="auth-title">{mode === 'signup' ? <>Save the boxes<br/><em>you love.</em></> : <>Your packaging,<br/><em>remembered.</em></>}</h2>
+      <p>{mode === 'signup' ? 'Create an account to sync your wishlist, cart and project history across visits.' : 'Log in to see saved boxes, continue your cart and access past enquiries.'}</p>
+      <form onSubmit={submit}>
+        {mode === 'signup' && <Field label="Full name" required><input autoFocus required autoComplete="name" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Your full name"/></Field>}
+        <Field label="Email address" required><input autoFocus={mode==='login'} required type="email" autoComplete="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="you@company.com"/></Field>
+        <Field label="Password" required hint={mode==='signup'?'At least 8 characters':''}><input required minLength="8" type="password" autoComplete={mode==='signup'?'new-password':'current-password'} value={form.password} onChange={e=>setForm({...form,password:e.target.value})} placeholder="••••••••"/></Field>
+        {error && <div className="auth-error" role="alert">{error}</div>}
+        <button className="btn btn-accent auth-submit" disabled={loading}>{loading ? 'Please wait…' : mode === 'signup' ? 'Create my account' : 'Log in securely'} {!loading && <ArrowRight/>}</button>
+      </form>
+      <div className="auth-switch">{mode === 'signup' ? 'Already have an account?' : 'New to Kainat?'} <button onClick={()=>setAuth({mode:mode==='signup'?'login':'signup'})}>{mode === 'signup' ? 'Log in' : 'Create an account'}</button></div>
+      <div className="auth-trust"><ShieldCheck/> Passwords are securely hashed. Your data is never sold.</div>
+    </section>
+  </div>
+}
+
+function WishlistPage({ addToCart }) {
+  const { wishlist, toggleWishlist, user, openAuth } = React.useContext(StoreContext);
+  const saved = products.filter(product => wishlist.includes(product.id));
+  return <><PageHero eyebrow="YOUR SHORTLIST" title={<>Boxes worth<br/><em>coming back to.</em></>} text="Keep product ideas together while you compare formats, materials and quantities."><div className="hero-mini-stat"><strong>{String(saved.length).padStart(2,'0')}</strong><span>saved formats<br/>{user?'synced to your account':'on this device'}</span></div></PageHero>
+    <section className="section wishlist-section"><div className="container">
+      {!user && <div className="sync-banner"><div><ShieldCheck/><span><strong>Keep this list everywhere.</strong><small>Log in or create an account to sync saved boxes and cart data.</small></span></div><div><button onClick={()=>openAuth('login')} className="text-link">Log in</button><button onClick={()=>openAuth('signup')} className="btn btn-dark">Create account <ArrowRight/></button></div></div>}
+      {saved.length ? <><div className="wishlist-head"><div><span className="eyebrow">SAVED FOR LATER</span><h2>{saved.length} {saved.length===1?'box':'boxes'} in your wishlist</h2></div><Link to="/products" className="text-link">Keep exploring <ArrowRight/></Link></div><div className="product-grid">{saved.map(product=><ProductCard key={product.id} product={product} addToCart={addToCart}/>)}</div></> : <div className="wishlist-empty"><span><Heart/></span><h2>Your wishlist is ready.</h2><p>Tap the heart on any product to keep it here for later.</p><Link to="/products" className="btn btn-dark">Explore every box <ArrowRight/></Link></div>}
+    </div></section></>;
+}
+
+function AccountPage({ user, logout, showToast, addToCart, onUserUpdate }) {
+  const { wishlist, openAuth } = React.useContext(StoreContext);
+  const [name,setName]=useState(user?.name||'');
+  const [submissions,setSubmissions]=useState([]);
+  const [loading,setLoading]=useState(false);
+  useEffect(()=>{
+    setName(user?.name||'');
+    if(user) apiRequest('/api/account/submissions').then(data=>setSubmissions(data.submissions||[])).catch(()=>{});
+  },[user?.id]);
+  if(!user) return <><PageHero eyebrow="YOUR ACCOUNT" title={<>Your packaging,<br/><em>all in one place.</em></>} text="Log in to access synced wishlists, cart data and project history."/><section className="account-gate section"><div><UserRound/><h2>Log in to continue</h2><p>Your saved boxes are still safe on this device.</p><div><button className="btn btn-dark" onClick={()=>openAuth('login')}>Log in <ArrowRight/></button><button className="text-link" onClick={()=>openAuth('signup')}>Create an account</button></div></div></section></>;
+  const saved=products.filter(product=>wishlist.includes(product.id));
+  const saveProfile=async event=>{
+    event.preventDefault(); setLoading(true);
+    try{const data=await apiRequest('/api/account/profile',{method:'POST',body:{name}});onUserUpdate(data.user);showToast('Profile saved securely.');}
+    catch(err){showToast(err.message);} finally{setLoading(false)}
+  };
+  return <><PageHero dark eyebrow="CUSTOMER ACCOUNT" title={<>Good to see you,<br/><em>{user.name.split(' ')[0]}.</em></>} text="Your wishlist, shopping data and project history are securely synced."><div className="account-hero-card"><span>{user.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase()}</span><div><strong>{user.name}</strong><small>{user.email}</small></div></div></PageHero>
+    <section className="section account-section"><div className="container account-layout"><aside className="account-nav"><span className="eyebrow">ACCOUNT OVERVIEW</span><a href="#profile">Profile</a><a href="#saved">Saved boxes <b>{saved.length}</b></a><a href="#activity">Project history <b>{submissions.length}</b></a><button onClick={logout}><LogOut/> Log out</button></aside><div className="account-content">
+      <section className="account-panel" id="profile"><div className="account-panel-head"><div><span className="eyebrow">PERSONAL DETAILS</span><h2>Your profile</h2></div><span className="save-state"><CircleCheck/> Auto-saved account data</span></div><form onSubmit={saveProfile} className="profile-form"><Field label="Full name" required><input value={name} onChange={e=>setName(e.target.value)} required/></Field><Field label="Email address" hint="Contact support to change your login email"><input value={user.email} disabled/></Field><button className="btn btn-dark" disabled={loading}>{loading?'Saving…':'Save profile'} {!loading&&<ArrowRight/>}</button></form></section>
+      <section className="account-panel" id="saved"><div className="account-panel-head"><div><span className="eyebrow">YOUR SHORTLIST</span><h2>Saved boxes</h2></div><Link to="/wishlist" className="text-link">View wishlist <ArrowRight/></Link></div>{saved.length?<div className="account-saved-grid">{saved.slice(0,3).map(product=><Link to={`/products/${product.id}`} key={product.id}><img src={product.image} alt=""/><span><strong>{product.name}</strong><small>PKR {product.price.toLocaleString()} / unit</small></span></Link>)}</div>:<p className="account-empty-copy">No saved products yet. Use the heart on any box to add it here.</p>}</section>
+      <section className="account-panel" id="activity"><div className="account-panel-head"><div><span className="eyebrow">PROJECT HISTORY</span><h2>Enquiries & orders</h2></div></div>{submissions.length?<div className="activity-list">{submissions.map(item=><div key={item.id}><span className="activity-icon">{item.type==='orders'?<ShoppingBag/>:item.type==='quotes'?<FileUp/>:<Mail/>}</span><div><strong>{item.type==='orders'?'Stock order':item.type==='quotes'?'Custom quote request':item.type==='contacts'?'Website enquiry':'Newsletter signup'}</strong><small>{new Date(item.createdAt).toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'numeric'})} · Reference #{item.id}</small></div><b>Saved</b></div>)}</div>:<p className="account-empty-copy">Your quote requests, enquiries and orders will appear here automatically.</p>}</section>
+    </div></div></section></>;
+}
+
 function CartDrawer({ items, open, close, updateQty, remove, navigate }) {
  const subtotal=items.reduce((s,i)=>s+i.price*i.qty,0);
  return <><div className={`drawer-overlay ${open?'open':''}`} onClick={close}></div><aside className={`cart-drawer ${open?'open':''}`} aria-hidden={!open}><div className="drawer-head"><div><span>YOUR CART</span><strong>{items.length} {items.length===1?'item':'items'}</strong></div><button onClick={close}><X/></button></div><div className="drawer-body">{items.length===0?<div className="empty-cart"><ShoppingBag/><h2>Your cart is light.</h2><p>Browse our production-ready packaging or start a fully custom brief.</p><Link to="/products" className="btn btn-dark" onClick={close}>Explore products</Link></div>:items.map(item=><div className="cart-item" key={item.id}><img src={item.image} alt={item.name}/><div><strong>{item.name}</strong><span>MOQ multiples of {item.moq}</span><div className="cart-item-bottom"><div className="qty small"><button onClick={()=>updateQty(item.id,Math.max(item.moq,item.qty-item.moq))}><Minus/></button><span>{item.qty}</span><button onClick={()=>updateQty(item.id,item.qty+item.moq)}><Plus/></button></div><b>PKR {(item.price*item.qty).toLocaleString()}</b></div><button className="remove" onClick={()=>remove(item.id)}>Remove</button></div></div>)}</div>{items.length>0&&<div className="drawer-foot"><div><span>Subtotal</span><strong>PKR {subtotal.toLocaleString()}</strong></div><p>Shipping and taxes are calculated at checkout.</p><button className="btn btn-accent" onClick={()=>{close();navigate('/checkout')}}>Secure checkout <ArrowRight/></button><Link to="/quote" onClick={close}>Need custom print or sizing? Request a quote</Link></div>}</aside></>
 }
 
 function CheckoutPage({ items, clearCart, showToast, navigate }) {
+ const { user } = React.useContext(StoreContext);
  const [done,setDone]=useState(false); const subtotal=items.reduce((s,i)=>s+i.price*i.qty,0); const shipping=subtotal>100000?0:2500;
  const submit=e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget));saveSubmission('orders',{...data,items,total:subtotal+shipping});clearCart();setDone(true);showToast('Order placed successfully.');};
  if(done)return <section className="success-page"><div><span className="success-icon"><Check/></span><span className="eyebrow">ORDER CONFIRMED</span><h1>It’s in the<br/><em>production queue.</em></h1><p>We’ve emailed your order summary. Our team will confirm stock and dispatch details shortly.</p><div className="success-ref">ORDER <strong>KAB-{String(Date.now()).slice(-6)}</strong></div><Link to="/products" className="btn btn-dark">Continue shopping <ArrowRight/></Link></div></section>;
  if(!items.length)return <section className="success-page"><div><ShoppingBag className="large-empty"/><h1>Your cart is empty.</h1><p>Add a production-ready item before heading to checkout.</p><Link to="/products" className="btn btn-dark">Browse products <ArrowRight/></Link></div></section>;
- return <section className="checkout"><div className="container"><div className="checkout-head"><Logo/><span><LockKeyhole/> Secure checkout</span></div><div className="checkout-grid"><form onSubmit={submit}><span className="eyebrow">DELIVERY DETAILS</span><h1>Where should we send it?</h1><div className="form-grid"><Field label="Full name" required full><input name="name" required/></Field><Field label="Email" required><input name="email" type="email" required/></Field><Field label="Phone" required><input name="phone" required/></Field><Field label="Company"><input name="company"/></Field><Field label="City" required><input name="city" required/></Field><Field label="Delivery address" required full><textarea name="address" required rows="3"></textarea></Field></div><div className="payment-choice"><span className="eyebrow">PAYMENT</span><label><input type="radio" name="payment" value="Cash / bank transfer" defaultChecked/><CreditCard/><div><strong>Bank transfer / cash on delivery</strong><small>Our team will confirm payment and delivery terms after order review.</small></div></label></div><button className="btn btn-accent checkout-submit">Place order · PKR {(subtotal+shipping).toLocaleString()} <ArrowRight/></button><p className="checkout-legal"><LockKeyhole/> Your details are encrypted in transit. By ordering you agree to our terms.</p></form><aside className="order-summary"><h2>Order summary</h2>{items.map(i=><div className="summary-item" key={i.id}><div><img src={i.image} alt=""/><span>{i.qty}</span></div><p><strong>{i.name}</strong><small>{i.qty} × PKR {i.price.toLocaleString()}</small></p><b>PKR {(i.qty*i.price).toLocaleString()}</b></div>)}<div className="summary-totals"><div><span>Subtotal</span><b>PKR {subtotal.toLocaleString()}</b></div><div><span>Shipping</span><b>{shipping?'PKR '+shipping.toLocaleString():'FREE'}</b></div><div><strong>Total</strong><strong>PKR {(subtotal+shipping).toLocaleString()}</strong></div></div><div className="summary-trust"><ShieldCheck/><p><strong>Order review included</strong><span>A specialist verifies stock, quantities and delivery before processing.</span></p></div></aside></div></div></section>
+ return <section className="checkout"><div className="container"><div className="checkout-head"><Logo/><span><LockKeyhole/> Secure checkout</span></div><div className="checkout-grid"><form onSubmit={submit}><span className="eyebrow">DELIVERY DETAILS</span><h1>Where should we send it?</h1><div className="form-grid"><Field label="Full name" required full><input name="name" defaultValue={user?.name||''} required/></Field><Field label="Email" required><input name="email" type="email" defaultValue={user?.email||''} required/></Field><Field label="Phone" required><input name="phone" required/></Field><Field label="Company"><input name="company"/></Field><Field label="City" required><input name="city" required/></Field><Field label="Delivery address" required full><textarea name="address" required rows="3"></textarea></Field></div><div className="payment-choice"><span className="eyebrow">PAYMENT</span><label><input type="radio" name="payment" value="Cash / bank transfer" defaultChecked/><CreditCard/><div><strong>Bank transfer / cash on delivery</strong><small>Our team will confirm payment and delivery terms after order review.</small></div></label></div><button className="btn btn-accent checkout-submit">Place order · PKR {(subtotal+shipping).toLocaleString()} <ArrowRight/></button><p className="checkout-legal"><LockKeyhole/> Your details are encrypted in transit. By ordering you agree to our terms.</p></form><aside className="order-summary"><h2>Order summary</h2>{items.map(i=><div className="summary-item" key={i.id}><div><img src={i.image} alt=""/><span>{i.qty}</span></div><p><strong>{i.name}</strong><small>{i.qty} × PKR {i.price.toLocaleString()}</small></p><b>PKR {(i.qty*i.price).toLocaleString()}</b></div>)}<div className="summary-totals"><div><span>Subtotal</span><b>PKR {subtotal.toLocaleString()}</b></div><div><span>Shipping</span><b>{shipping?'PKR '+shipping.toLocaleString():'FREE'}</b></div><div><strong>Total</strong><strong>PKR {(subtotal+shipping).toLocaleString()}</strong></div></div><div className="summary-trust"><ShieldCheck/><p><strong>Order review included</strong><span>A specialist verifies stock, quantities and delivery before processing.</span></p></div></aside></div></div></section>
 }
 
 function LegalPage({type}) {return <section className="legal container"><span className="eyebrow">KAINAT LEGAL</span><h1>{type==='privacy'?'Privacy policy':'Terms of service'}</h1><p className="updated">Last updated: August 11, 2026</p><h2>{type==='privacy'?'Information we collect':'Orders and quotations'}</h2><p>{type==='privacy'?'We collect information you provide through enquiry, quote, checkout and newsletter forms. This may include your name, company, contact information, project requirements and uploaded artwork.':'Stock orders are subject to availability and confirmation. Custom quotations remain valid for the period shown and production begins after artwork, specifications and payment terms are approved.'}</p><h2>{type==='privacy'?'How we use information':'Custom production'}</h2><p>{type==='privacy'?'We use this information to respond to requests, prepare quotes, process orders and improve our service. We do not sell personal information.':'Color, board and finished dimensions may carry standard manufacturing tolerances stated in your approved specification. Production lead times begin after final approval.'}</p><h2>Contact</h2><p>Questions can be sent to <a href={`mailto:${BRAND.email}`}>{BRAND.email}</a>.</p></section>}
@@ -526,10 +657,10 @@ function saveSubmission(type,data){
   const {_file,...serializable}=data;
   const payload={...serializable,formType:type,createdAt:new Date().toISOString()};
   try{const key=`kainat_${type}`;const existing=JSON.parse(localStorage.getItem(key)||'[]');localStorage.setItem(key,JSON.stringify([...existing,payload]));}catch(e){console.info('Local submission storage unavailable.',e)}
-  const endpoint=import.meta.env.VITE_FORMS_ENDPOINT || 'http://localhost:4000/api/forms';
+  const endpoint=import.meta.env.VITE_FORMS_ENDPOINT || `${API_ROOT}/api/forms`;
   let request;
-  if(_file){const body=new FormData();Object.entries(payload).forEach(([k,v])=>body.append(k,Array.isArray(v)?v.join(', '):v));body.append('artwork',_file);request={method:'POST',body};}
-  else request={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)};
+  if(_file){const body=new FormData();Object.entries(payload).forEach(([k,v])=>body.append(k,Array.isArray(v)?v.join(', '):v));body.append('artwork',_file);request={method:'POST',body,credentials:'include'};}
+  else request={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),credentials:'include'};
   fetch(endpoint,request)
     .then(async (response)=>{
       const text=await response.text();
@@ -540,17 +671,79 @@ function saveSubmission(type,data){
 }
 
 function App(){
- const [path,navigate]=useRoute(); const [cartOpen,setCartOpen]=useState(false); const [toast,setToast]=useState('');
- const [cart,setCart]=useState(()=>{try{return JSON.parse(localStorage.getItem('kainat_cart')||'[]')}catch{return[]}});
+ const [path,navigate]=useRoute();
+ const [cartOpen,setCartOpen]=useState(false);
+ const [toast,setToast]=useState('');
+ const [auth,setAuth]=useState(null);
+ const [user,setUser]=useState(null);
+ const [accountReady,setAccountReady]=useState(false);
+ const [cart,setCart]=useState(()=>readStoredArray('kainat_cart'));
+ const [wishlist,setWishlist]=useState(()=>readStoredArray('kainat_wishlist').filter(id=>products.some(product=>product.id===id)));
+
+ const canonicalCart = items => (Array.isArray(items)?items:[]).map(item=>{
+   const product=products.find(p=>p.id===item.id);
+   if(!product)return null;
+   const qty=Math.max(product.moq,Number(item.qty)||product.moq);
+   return {...product,qty};
+ }).filter(Boolean);
+ const mergeCarts=(first,second)=>{
+   const merged=new Map();
+   [...canonicalCart(first),...canonicalCart(second)].forEach(item=>{
+     const previous=merged.get(item.id);
+     merged.set(item.id,previous?{...item,qty:Math.max(previous.qty,item.qty)}:item);
+   });
+   return [...merged.values()];
+ };
+ const openAuth=mode=>setAuth({mode});
+ const hydrateAccount=async (authData,announce=false)=>{
+   const localWishlist=readStoredArray('kainat_wishlist');
+   const serverWishlist=Array.isArray(authData.wishlist)?authData.wishlist:[];
+   const mergedWishlist=[...new Set([...serverWishlist,...localWishlist])].filter(id=>products.some(p=>p.id===id));
+   setUser(authData.user); setWishlist(mergedWishlist);
+   await Promise.all(mergedWishlist.filter(id=>!serverWishlist.includes(id)).map(id=>apiRequest(`/api/wishlist/${id}`,{method:'PUT',body:{active:true}}).catch(()=>null)));
+   try{
+     const account=await apiRequest('/api/account/data');
+     setCart(current=>mergeCarts(account.cart,current));
+   }catch{}
+   setAccountReady(true);
+   if(announce)setToast(`Welcome, ${authData.user.name.split(' ')[0]}. Your saved data is now synced.`);
+ };
+
+ useEffect(()=>{
+   let active=true;
+   apiRequest('/api/auth/me').then(data=>active&&hydrateAccount(data)).catch(()=>active&&setAccountReady(true));
+   return()=>{active=false};
+ },[]);
  useEffect(()=>localStorage.setItem('kainat_cart',JSON.stringify(cart)),[cart]);
+ useEffect(()=>localStorage.setItem('kainat_wishlist',JSON.stringify(wishlist)),[wishlist]);
+ useEffect(()=>{
+   if(!user||!accountReady)return;
+   const timer=setTimeout(()=>apiRequest('/api/account/data',{method:'PUT',body:{cart,profile:{name:user.name,email:user.email}}}).catch(()=>{}),650);
+   return()=>clearTimeout(timer);
+ },[cart,user?.id,user?.name,accountReady]);
+
  const addToCart=(p,qty=p.moq)=>{setCart(c=>{const exists=c.find(i=>i.id===p.id);return exists?c.map(i=>i.id===p.id?{...i,qty:i.qty+qty}:i):[...c,{...p,qty}]});setCartOpen(true);setToast(`${p.name} added to your cart.`)};
+ const toggleWishlist=product=>{
+   const active=!wishlist.includes(product.id);
+   setWishlist(current=>active?[...new Set([...current,product.id])]:current.filter(id=>id!==product.id));
+   setToast(active?`${product.name} saved to your wishlist.`:`${product.name} removed from your wishlist.`);
+   if(user)apiRequest(`/api/wishlist/${product.id}`,{method:'PUT',body:{active}}).then(data=>setWishlist(data.wishlist)).catch(error=>setToast(error.message));
+ };
+ const handleAuthenticated=(data,mode)=>hydrateAccount(data,true);
+ const logout=async()=>{
+   await apiRequest('/api/auth/logout',{method:'POST'}).catch(()=>{});
+   setUser(null);setAccountReady(false);setToast('You’re logged out. Saved items remain on this device.');navigate('/');
+ };
  const cartCount=cart.reduce((s,i)=>s+i.qty,0);
- const updateQty=(id,qty)=>setCart(c=>c.map(i=>i.id===id?{...i,qty}:i)); const remove=id=>setCart(c=>c.filter(i=>i.id!==id));
+ const updateQty=(id,qty)=>setCart(c=>c.map(i=>i.id===id?{...i,qty}:i));
+ const remove=id=>setCart(c=>c.filter(i=>i.id!==id));
  const routePath=path.split('?')[0];
  let page;
  if(routePath==='/')page=<Home addToCart={addToCart}/>;
  else if(routePath==='/products')page=<ProductsPage addToCart={addToCart}/>;
  else if(routePath.startsWith('/products/'))page=<ProductDetail id={routePath.split('/')[2]} addToCart={addToCart}/>;
+ else if(routePath==='/wishlist')page=<WishlistPage addToCart={addToCart}/>;
+ else if(routePath==='/account')page=<AccountPage user={user} logout={logout} showToast={setToast} addToCart={addToCart} onUserUpdate={setUser}/>;
  else if(routePath==='/quote')page=<QuotePage showToast={setToast}/>;
  else if(routePath==='/about')page=<AboutPage/>;
  else if(routePath==='/services')page=<ServicesPage/>;
@@ -563,7 +756,8 @@ function App(){
  else if(routePath==='/terms')page=<LegalPage type="terms"/>;
  else page=<NotFound/>;
  const isCheckout=routePath==='/checkout';
- return <><SEO path={routePath}/>{!isCheckout&&<Header path={routePath} cartCount={cartCount} openCart={()=>setCartOpen(true)}/>}<main>{page}</main>{!isCheckout&&<><Footer showToast={setToast}/><WhatsApp/></>}<CartDrawer items={cart} open={cartOpen} close={()=>setCartOpen(false)} updateQty={updateQty} remove={remove} navigate={navigate}/>{toast&&<Toast message={toast} close={()=>setToast('')}/>}</>
+ const storeValue={wishlist,toggleWishlist,user,openAuth};
+ return <StoreContext.Provider value={storeValue}><SEO path={routePath}/>{!isCheckout&&<Header path={routePath} cartCount={cartCount} openCart={()=>setCartOpen(true)} wishlistCount={wishlist.length} user={user} openAuth={openAuth}/>}<main>{page}</main>{!isCheckout&&<><Footer showToast={setToast}/><WhatsApp/></>}<CartDrawer items={cart} open={cartOpen} close={()=>setCartOpen(false)} updateQty={updateQty} remove={remove} navigate={navigate}/><AuthModal auth={auth} setAuth={setAuth} onAuthenticated={handleAuthenticated}/>{toast&&<Toast message={toast} close={()=>setToast('')}/>}</StoreContext.Provider>
 }
 
 createRoot(document.getElementById('root')).render(<App/>);
