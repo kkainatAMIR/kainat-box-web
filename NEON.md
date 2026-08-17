@@ -75,6 +75,12 @@ Expected migration output:
 Re-running `npm run migrate` is safe — applied files are recorded in the
 `schema_migrations` table and skipped.
 
+**Verify everything at any time:**
+
+```bash
+npm run db:check    # connects, verifies all tables exist, prints row counts
+```
+
 ## Step 4 — Deploy to Vercel
 
 1. Push to GitHub, then in Vercel: **Add New → Project → Import** this repository.
